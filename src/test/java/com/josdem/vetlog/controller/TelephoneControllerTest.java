@@ -4,6 +4,7 @@ import static com.josdem.vetlog.controller.PetControllerTest.PET_UUID;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -52,7 +53,6 @@ class TelephoneControllerTest {
     @DisplayName("showing adopting form")
     @WithMockUser(username = "josdem", password = "12345678", roles = "USER")
     void shouldShowAdoptingForm(TestInfo testInfo) throws Exception {
-
         registerPet();
 
         log.info("Running: {}", testInfo.getDisplayName());
@@ -62,6 +62,39 @@ class TelephoneControllerTest {
                 .andExpect(model().attributeExists("pet"))
                 .andExpect(model().attributeExists("telephoneCommand"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("test save method with errors in BindingResult")
+    @WithMockUser(username = "josdem", password = "12345678", roles = "USER")
+    void testSave_WithBindingResultErrors() throws Exception {
+        registerPet();
+
+        // Simulujeme BindingResult s chybami
+        mockMvc.perform(post("/telephone/save")
+                        .with(csrf())
+                        .param("uuid", PET_UUID)
+                        .param("phoneNumber", "invalid-phone"))
+                .andExpect(status().is3xxRedirection()) // Očakávame presmerovanie (3xx)
+                .andExpect(view().name("redirect:/"))
+                .andExpect(model().attributeExists("message"));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("test save method with successful submission")
+    @WithMockUser(username = "josdem", password = "12345678", roles = "USER")
+    void testSave_Success() throws Exception {
+        registerPet();
+
+        mockMvc.perform(post("/telephone/save")
+                        .with(csrf())
+                        .param("uuid", PET_UUID)
+                        .param("phoneNumber", "123456789")) // Pridajte ďalšie parametre pre úspešné odoslanie
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/"))
+                .andExpect(model().attributeExists("message"));
     }
 
     private void registerPet() throws Exception {

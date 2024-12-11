@@ -17,6 +17,7 @@ limitations under the License.
 package com.josdem.vetlog.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.TestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 @Slf4j
@@ -51,5 +53,14 @@ class LoginControllerTest {
         mockMvc.perform(get("/login").param("error", "invalid credentials"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("login/login"));
+    }
+
+    @Test
+    @DisplayName("should log out the user and redirect to home page")
+    @WithMockUser(username = "testuser", roles = "USER") // Simuluje autentifikovaného používateľa
+    void shouldLogoutAndRedirectToHomePage() throws Exception {
+        mockMvc.perform(get("/logout")) // Simuluje GET požiadavku na /logout
+                .andExpect(status().is3xxRedirection()) // Očakáva presmerovanie
+                .andExpect(redirectedUrl("/")); // Overuje, že URL je presmerované na "/"
     }
 }

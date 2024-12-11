@@ -96,6 +96,8 @@ public class PetServiceImpl implements PetService {
         return result;
     }
 
+
+
     public List<Pet> getPetsByStatus(PetStatus status) {
         return petRepository.findAllByStatus(status);
     }

@@ -22,7 +22,11 @@ import com.josdem.vetlog.model.User;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface PetRepository extends JpaRepository<Pet, Long> {
     Pet save(Pet pet);
 
@@ -35,4 +39,10 @@ public interface PetRepository extends JpaRepository<Pet, Long> {
     List<Pet> findAllByAdopter(User user);
 
     List<Pet> findAllByStatus(PetStatus status);
+
+    @Query("SELECT p FROM Pet p " +
+            "WHERE (p.user = :user AND p.status <> 'ADOPTED') " +
+            "OR p.adopter = :user")
+    List<Pet> findAllRelevantPetsForUser(@Param("user") User user);
 }
+
